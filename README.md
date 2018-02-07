@@ -2,15 +2,17 @@
 
 ### Add a link to Kathryn's McLean's article
 
-One of our core values at integrate.ai is to Love People. We mean this in every sense, as we shared in ([this post](https://medium.com/@integrate.ai/love-people-our-1-company-value-d62ab33f44ba)), but one that is pertinent to our machine learning team is to build models ethically, considering how their output may impact people's lives.
+One of our core values at integrate.ai is to Love People. We mean this in every sense, as we shared in ([this post](https://medium.com/@integrate.ai/love-people-our-1-company-value-d62ab33f44ba)), but the one that is pertinent to our machine learning team is to build models ethically, considering how their output may impact people's lives.
 
 We work with large enterprises and apply machine learning to consumer behavioural data to help our clients increase the overall lifetime value of their customers, i.e., to guide them to the next best action or product to create stronger relationships with the business. There are different attributes and behaviours that we could consider when building our models and some of them are socially sensitive: for many use cases, we don't want things like gender, ethnicity, or marital status to influence our predictions. 
 
-As much as we Love People, we also love cake (did anybody say red velvet?). And we really love having our cake and eating it too. When it comes to managing potential sources of bias in models, Variational Fair Autoencoders (VFAE) allow us to do just that. (KH COMMENT -- can you put a link here back to the original paper?) 
+As much as we Love People, we also love cake (did anybody say red velvet?). And we really love having our cake and eating it too. When it comes to managing potential sources of bias in models, Variational Fair Autoencoders (VFAE) allow us to do just that ([Louizos et al. 2016](https://arxiv.org/abs/1511.00830)).
 
-Briefly, autoencoders are machine learning models that reproduce the input data used to train an algorithm. This is in contrast to typical models, in which the target variable is different from the input. (KH COMMENT - explain what a target variable is. Also, maybe it would be a good idea to define "encoding" and "decoding" at this spot?) Autoencoders allow us to transform a dataset into a new mathematical representation, or latent space, that has a different representation of the original data. Why would we do this? One powerful application relates to helping an algorithm work better on real-world data: using a VAE, we can inject noise into the input, and while trying to predict the “clean” dataset, we will obtain a model that is very flexible to more messy, real-world data. (KH COMMENT - can you give one more example of why we'd use VAEs in practice before we shift to VFAEs? These are great!) 
+Generally, machine learning (ML) models take a set of inputs and are trained to learn how to predict a target. Inputs could be images, in which case the target could be the classification of objects in the images. Inputs could be text, with the target being corresponding text in a different language, if we were interested in creating a model that would translate for us. And the list goes on. ML models are very flexible in what inputs they accept and what targets they can be trained to predict.
 
-The word variational refers to Bayesian techniques to approximate the posterior, i.e. the probability distribution of the output, the model is trying to predict. (KH COMMENT - add a few more sentences about this) 
+Autoencoders are a unique type of ML models in which the input and output are very similar to one another, and in some cases identical. Autoencoders typically have two channels. The first performs an "encoding" of the input data into a new mathematical representation, or latent space, that has a different representation of the original data. This "encoded" data then feeds into a "deconding" channel which attempts to transform the latent representation of the data, back into the original space. Why would we do this? One powerful application relates to helping an algorithm work better on real-world data: using an autoencoder, we can inject noise into the input, and while trying to predict the “clean” dataset, we will obtain a model that is very flexible to more messy, real-world data. Another application is the reduction in the dimensionality of the original dataset. ML models require more resources to train, the more features are included in the input data. By encoding the data into a latent space with a lower dimension, we can save on computational resources, while at the same time still retaining the most valuable components of the data.
+
+The word variational refers to Bayesian techniques to approximate the posterior, i.e. the probability distribution of the output, the model is trying to predict. In practice, this means we make assumptions regarding the probability distribution of our target and latent representation, with the outcome being that instead of attempting to predict the exact probability distributions, we only aim for an approximation. This results in significant computaional simplification, with a minor reduction in ultimate precision (so long as the assumed probability distributions are reasonable).
 
 Most interesting, and novel, is the fair component. In VFAEs, we explicitly give information about the properties of the data we do not want influencing our models. The latent version of a dataset generated by this model contains much of the valuable details of the original dataset, but without any influence of the sensitive information. We can then train models on this latent representation, and obtain good predictions that are not biased or influenced by sensitive properties of the people included in the dataset.
 
@@ -20,7 +22,7 @@ Let's explore how this might work using the Stanford Open Policing Project - Ohi
 
 (As a side note, we believe a use case like predicting if someone should be arrested shouldn't be fully automated by an algorithm; this kind of sensitive analysis requires human judgment (at least for the foreseeable future)).
 
-Given the sensitivity of the task, we choose to optimize for precision in correctly classifying those who should be arrested. This would come at the expense of missing people who do, but we are OK with that. (KH COMMENT - say more here about the tradeoff between precision and recall and why you have to make a choice...) 
+In a perfect scenario, we would train a model that has both a high precision **and** recall. Precision is the measure to which a model **correctly** classifies people, whereas recall is a measure of coverage of the classification. So in our test case here, a high precision would mean predicting a person should be arrested only if the model is super confident of that. On the other hand, a high recall would mean a model which predicts as many arrests as possible, so as not to miss any. We can see how there is a tradeoff between the two. Given the sensitivity of the task, we choose to optimize for precision in correctly classifying those who should be arrested. This would come at the expense of missing people who do, but we are OK with that. 
 
 This dataset is highly imbalanced, with only about 0.6% of cases being arrests. Furthermore, it does not include many features (26 overall, with 16 being either of no use or redundant). Another challenge is that once the data is processed, which will be described below, the number of columns significantly expands due to categorical features being transformed into dummy variables. This results in a very sparse dataframe.
 
@@ -57,14 +59,9 @@ drug_related_stop | Yes | An important feature
 
 ### Let's clean and prepare the data
 
-(KH COMMENT - I find the cleaning section to be a bit long and detailed - not sure you need to recount every step. That said, I do like what you noticed about the violations column...what would you remove to shorten this by 50% at least?) 
+For more details on the cleaning and processing of the data, please take a look at our attached GitHub repository. 
 
-We take the time of day and convert it to an hour integer. 
-We take the date and convert it to a month integer. 
-
-To avoid including too many locations in the ‘location_raw’ feature, thereby significantly increasing the sparseness of the final dataframe, we keep only the most frequent 20 locations, which account for nearly 90% of all records. The remaining values are set to null, and will be imputed as described further down.
-
-The violations column is an interesting one. It includes lists of strings, each denoting the violations (allegedly) performed by the person. For model simplicity we only want to focus on one, and we want to make sure it is the one that is most severe. Overall there are 12 unique violations included in the dataset, ordered here with #1 being the worst (which is a subjective definition):
+Here we would mention only the violations column, which we found interesting one. It includes lists of strings, each denoting the violations (allegedly) performed by the person. For model simplicity we only want to focus on one, and we want to make sure it is the one that is most severe. Overall there are 12 unique violations included in the dataset, ordered here with #1 being the worst (which is a subjective definition):
 
 1. dui
 2. speeding
@@ -81,11 +78,7 @@ The violations column is an interesting one. It includes lists of strings, each 
 13. other
 14. other (non-mapped)
 
-We then replace the violations column with an integer column representing the worst violation attributed to the person. 
-
-We take the remaining columns, which all contain categorical data, and replace null values with values taken from a probability distribution of the other values in the column. 
-
-Finally, we then create dummy versions of every column.
+We replace the violations column with an integer column representing the worst violation attributed to the person. 
 
 The result is a data frame with 82 columns, which is now ready to be analyzed using a machine learning algorithm.
 
@@ -97,9 +90,16 @@ Once we perform a pass on the dataset, we get the following results
 
 However, it is upon a deeper look that we see an issue. Consider the distribution of the races of the people in the dataset
 
-[[[Table which lists the distribution of race in the raw dataset, compared with the model’s prediction of arrests versus non-arrests]]]
+Group | N_group/N_total | N_group/N_total (predicted arrest) | N_group/N_total (predicted no arrest)
+--- | --- | --- | ---
+driver_race_Asian	| 0.013555 | 0.00313676 | 0.013573
+driver_race_Black	| 0.12477 | 0.274467 | 0.124512
+driver_race_White	| 0.83926 | 0.696989 | 0.839506
+driver_race_Hispanic | 0.0217688 | 0.0244668 | 0.0217642
 
-We can see that after modelling, the fraction of African Americans and Hispanics increases, whereas the fraction of White and Asian decreases. We get a similar result if we look at the discrimination parameter proposed by Zemel et al. (2013)
+We can see that after modelling, the distribution of the groups of people changes. In particular, the ratio of African Americans significantly increases among those who are predicted to be arrested, whereas the fraction of Caucasians decreases. We can quantify this result by looking at a modified version of the discrimination parameter proposed by [Zemel et al. (2013)](https://www.cs.toronto.edu/~toni/Papers/icml-final.pdf). The original is defined as follows
+
+$$\frac{2}{1}$$
 
 [[[Discrimination values]]]
 
@@ -119,4 +119,4 @@ These sorts of techniques are very exciting for integrate.ai because they allow 
 
 There are, of course, limitations to these models. For one, we need to explicitly specify what features we consider sensitive. This may not always be obvious. Also, given that we transform the dataset into a latent space, which is essentially abstract, we will have difficulty explaining the reasons for our model results. For example, in the above analysis although we can be confident that race is not a factor in predicting whether a person should be arrested, we would have trouble saying what is an important factor. This is where techniques such as FairML (KH COMMENT - can you provide a link back to FairML paper?), for example, can help.
 
-Loving people means doing the best we can to ensure every person affected by our model is treated fairly. Doing so is a complicated task, especially when dealing with complicated non-linear models, but one that we proudly undertake. Using VFAE is just one of the tools we will employ to achieve this goal. We are investing engineering effort to ensure our infrastructure is secure, are creating partnerships with the Vector Institute to explore technical solutions with leading researchers in the field, and are making deliberate choices about the projects we accept from clients so we can say with integrity that we are applying AI to make the world a better place. 
+Loving people means doing the best we can to ensure every person affected by our model is treated fairly. Doing so is a complicated task, especially when dealing with complex non-linear models and data that inherently contains bias, but one that we proudly undertake (as our own Kathryn Hume discussed in [this article](http://www.macleans.ca/opinion/artificial-intelligence-is-the-future-but-its-not-immune-to-human-bias/)). Using VFAE is just one of the tools we will employ to achieve this goal. We are investing engineering effort to ensure our infrastructure is secure, are creating partnerships with the Vector Institute to explore technical solutions with leading researchers in the field, and are making deliberate choices about the projects we accept from clients so we can say with integrity that we are applying AI to make the world a better place. 
