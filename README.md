@@ -61,7 +61,7 @@ drug_related_stop | Yes | An important feature
 
 For more details on the cleaning and processing of the data, please take a look at our attached GitHub repository. 
 
-Here we would mention only the violations column, which we found interesting one. It includes lists of strings, each denoting the violations (allegedly) performed by the person. For model simplicity we only want to focus on one, and we want to make sure it is the one that is most severe. Overall there are 12 unique violations included in the dataset, ordered here with #1 being the worst (which is a subjective definition):
+Here we would mention only the violations column, which we found interesting. It includes lists of strings, each denoting the violations (allegedly) performed by the person. For model simplicity we only want to focus on one, and we want to make sure it is the one that is most severe. Overall there are 12 unique violations included in the dataset, ordered here with #1 being the worst (which is a subjective definition):
 
 1. dui
 2. speeding
@@ -97,9 +97,14 @@ driver_race_Black	| 0.12477 | 0.274467 | 0.124512
 driver_race_White	| 0.83926 | 0.696989 | 0.839506
 driver_race_Hispanic | 0.0217688 | 0.0244668 | 0.0217642
 
-We can see that after modelling, the distribution of the groups of people changes. In particular, the ratio of African Americans significantly increases among those who are predicted to be arrested, whereas the fraction of Caucasians decreases. We can quantify this result by looking at a modified version of the discrimination parameter proposed by [Zemel et al. (2013)](https://www.cs.toronto.edu/~toni/Papers/icml-final.pdf). The original is defined as follows
+We can see that after modelling, the distribution of the groups of people changes. In particular, the ratio of African Americans significantly increases among those who are predicted to be arrested, whereas the fraction of Caucasians decreases. As we mentioned, we need to define a feature to use in our VFAE as the sensitive feature. For simplicity we will choose just one, even though VFAEs do accept multiple, and we will use 'driver_race_Black' given the significant bias the model shows against this group of people. We can quantify this result by looking at a modified version of the discrimination parameter proposed by [Zemel et al. (2013)](https://www.cs.toronto.edu/~toni/Papers/icml-final.pdf). The original is defined as follows
 
-$$\frac{2}{1}$$
+![alt text](https://github.com/yevgeni-integrate-ai/VFAE/edit/master/discrimination.png "Discrimination parameter")
+
+This parameter compares the ratio of people in the protected class (s=1) that our model prediction says should be arrested (a=1), with the equivalent ratio for the non-protected class (s=0, i.e. everyone else). We want the ratios to be as close to one another as possible, therefore we are looking for a discrimination parameter close to zero. However, there is a challenge with using this parameter in the case of a severely imbalanced dataset, which we find ourselves in. The issue is that the ratio of predicted arrests is very small, therefore the difference between two small numbers is likely to be small as well. To remedy this we consider two other discrimination parameters. One that takes the ratio of the individual ratios, which we will call discrimination_ratio, and one that takes the difference as above, but normalizes it based on the overall arrest probability, which we will call discrimination_normalized.
+
+![alt text](https://github.com/yevgeni-integrate-ai/VFAE/edit/master/discrimination_ratio.png "Discrimination_ratio parameter")
+![alt text](https://github.com/yevgeni-integrate-ai/VFAE/edit/master/discrimination_normalized.png "Discrimination_normalized parameter")
 
 [[[Discrimination values]]]
 
