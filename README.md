@@ -101,12 +101,11 @@ We can see that after modelling, the distribution of the groups of people change
 
 ![](https://github.com/yevgeni-integrate-ai/VFAE/blob/master/discrimination.png)
 
-This parameter compares the ratio of people in the protected class (s=1) that our model prediction says should be arrested (a=1), with the equivalent ratio for the non-protected class (s=0, i.e. everyone else). We want the ratios to be as close to one another as possible, therefore we are looking for a discrimination parameter close to zero. However, there is a challenge with using this parameter in the case of a severely imbalanced dataset, which we find ourselves in. The issue is that the ratio of predicted arrests is very small, therefore the difference between two small numbers is likely to be small as well. To remedy this we consider two other discrimination parameters. One that takes the ratio of the individual ratios, which we will call discrimination_ratio, and one that takes the difference as above, but normalizes it based on the overall arrest probability, which we will call discrimination_normalized.
+This parameter compares the probability our model predicts for arrest (a=1) of people in the protected class (s=1), with the corresponding probability for the non-protected class (s=0, i.e. everyone else). We want the probabilities to be as close to one another as possible, therefore we are looking for a discrimination parameter close to zero. However, there is a challenge with using this parameter in the case of a severely imbalanced dataset, which we find ourselves in. The issue is that the probability of arrests is very small, therefore the difference between two small numbers is likely to be small as well. To remedy this we consider instead the ratio between the two probabilities
 
 ![](https://github.com/yevgeni-integrate-ai/VFAE/blob/master/discrimination_ratio.png "Discrimination_ratio parameter")
-![](https://github.com/yevgeni-integrate-ai/VFAE/blob/master/discrimination_normalized.png "Discrimination_normalized parameter")
 
-We would ideally want discrimination_ratio to be as close to 1 as possible, and discrimination_normalized as close to zero as possible. We get the following results
+We would ideally want discrimination_ratio to be as close to 1 as possible. We get the following results
 
 Discrimination_ratio = 2.66
 
