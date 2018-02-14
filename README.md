@@ -114,7 +114,7 @@ Discrimination_normalized = 1.37
 
 Clearly this is problematic, and this is where VFAE steps in.
 
-# Variational Fair Autoencoder time!
+## Variational Fair Autoencoder time!
 
 By transforming the dataset using a VFAE, which involves injecting information regarding the race of the drivers into the model, we obtain a dataset which contains most of the useful information, but removes the dependence on race. Let us see what happens when we retrain the model. 
 
