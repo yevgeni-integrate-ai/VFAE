@@ -110,8 +110,6 @@ We would ideally want discrimination_ratio to be as close to 1 as possible. We g
 
 Discrimination_ratio = 2.66
 
-Discrimination_normalized = 1.37
-
 Clearly this is problematic, and this is where VFAE steps in.
 
 ## Variational Fair Autoencoder time!
@@ -124,9 +122,7 @@ Recall = 0.2
 
 We see that we still obtain comparable performance as before. Looking at the discrimination parameters and diatribution of predicted arrests within the groups
 
-Discrimination_ratio = 1.956154987824032
-
-Discrimination_normalized = 0.853114563411
+Discrimination_ratio = 2.75
 
 ![](https://github.com/yevgeni-integrate-ai/VFAE/blob/master/people_distribution_post_VFAE.png)
 
